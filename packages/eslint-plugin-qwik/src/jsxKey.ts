@@ -16,20 +16,20 @@ const defaultOptions = {
 };
 
 const messages = {
-  missingIterKey: 'Missing "key" prop for element in iterator',
+  missingIterKey: 'Missing "key" prop for element in iterator.',
   missingIterKeyUsePrag:
-    'Missing "key" prop for element in iterator. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead',
+    'Missing "key" prop for element in iterator. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead.',
   missingArrayKey:
     'Missing "key" prop for element in array. The key prop allows for improved rendering performance.',
   missingArrayKeyUsePrag:
-    'Missing "key" prop for element in array. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead',
-  nonUniqueKeys: '`key` prop must be unique',
+    'Missing "key" prop for element in array. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead.',
+  nonUniqueKeys: '`key` prop must be unique.',
 };
 
 export const jsxKey = {
   meta: {
     docs: {
-      description: 'Disallow missing `key` props in iterators/collection literals',
+      description: 'Disallow missing `key` props in iterators/collection literals.',
       category: 'Possible Errors',
       recommended: true,
       url: 'https://qwik.builder.io/docs/advanced/eslint/#jsx-key',
