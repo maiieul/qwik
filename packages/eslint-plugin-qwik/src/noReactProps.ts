@@ -11,6 +11,7 @@ const domElementRegex = /^[a-z]/;
 export const isDOMElementName = (name: string): boolean => domElementRegex.test(name);
 
 export const noReactProps: TSESLint.RuleModule<'noReactProps', []> = {
+  defaultOptions: [],
   meta: {
     type: 'problem',
     docs: {
