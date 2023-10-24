@@ -301,8 +301,8 @@ function isExported(variableDeclarator: Rule.Node): boolean {
   return false;
 }
 
-function getProgramBody(variableDeclarator) {
-  let program: Rule.Node = variableDeclarator;
+function getProgramBody(variableDeclarator: Rule.Node) {
+  let program = variableDeclarator;
   while (program.type !== 'Program') {
     program = program.parent;
   }

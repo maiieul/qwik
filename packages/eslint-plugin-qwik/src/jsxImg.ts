@@ -13,7 +13,7 @@ export const jsxImg = createRule({
     docs: {
       description:
         'For performance reasons, always provide width and height attributes for <img> elements, it will help to prevent layout shifts.',
-      recommended: 'warn',
+      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [],
@@ -148,7 +148,7 @@ function imgImportName(value: string) {
   return `Img${toPascalCase(value)}`;
 }
 
-function toPascalCase(string) {
+function toPascalCase(string: string) {
   return `${string}`
     .toLowerCase()
     .replace(new RegExp(/[-_]+/, 'g'), ' ')

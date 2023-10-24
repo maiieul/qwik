@@ -10,18 +10,18 @@ const reactSpecificProps = [
 const domElementRegex = /^[a-z]/;
 export const isDOMElementName = (name: string): boolean => domElementRegex.test(name);
 
-export const noReactProps = {
+export const noReactProps: TSESLint.RuleModule<'noReactProps', []> = {
   meta: {
     type: 'problem',
     docs: {
-      recommended: 'warn',
+      recommended: 'recommended',
       description: 'Disallow usage of React-specific `className`/`htmlFor` props.',
       url: 'https://qwik.builder.io/docs/advanced/eslint/#no-react-props',
     },
     fixable: 'code',
     schema: [],
     messages: {
-      prefer: 'Prefer the `{{ to }}` prop over the deprecated `{{ from }}` prop.',
+      noReactProps: 'Prefer the `{{ to }}` prop over the deprecated `{{ from }}` prop.',
     },
   },
   create(context) {
@@ -43,7 +43,7 @@ export const noReactProps = {
 
             context.report({
               node: classNameAttribute,
-              messageId: 'prefer',
+              messageId: 'noReactProps',
               data: { from, to },
               fix,
             });

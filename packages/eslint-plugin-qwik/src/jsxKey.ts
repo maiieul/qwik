@@ -1,11 +1,13 @@
 import jsxAstUtils from 'jsx-ast-utils';
 import { QwikEslintExamples } from '../examples';
+import { AST_NODE_TYPES, TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { JsxAttribute, JsxElement } from 'typescript';
 
 // ------------------------------------------------------------------------------
 // Rule Definition
 // ------------------------------------------------------------------------------
 
-function isFunctionLikeExpression(node) {
+function isFunctionLikeExpression(node: TSESTree.Node) {
   return node.type === 'FunctionExpression' || node.type === 'ArrowFunctionExpression';
 }
 
@@ -15,28 +17,38 @@ const defaultOptions = {
   warnOnDuplicates: false,
 };
 
-const messages = {
-  missingIterKey: 'Missing "key" prop for element in iterator.',
-  missingIterKeyUsePrag:
-    'Missing "key" prop for element in iterator. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead',
-  missingArrayKey:
-    'Missing "key" prop for element in array. The key prop allows for improved rendering performance.',
-  missingArrayKeyUsePrag:
-    'Missing "key" prop for element in array. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead',
-  nonUniqueKeys: '`key` prop must be unique',
-};
-
-export const jsxKey = {
+export const jsxKey: TSESLint.RuleModule<
+  | 'missingIterKey'
+  | 'missingIterKeyUsePrag'
+  | 'missingArrayKey'
+  | 'missingArrayKeyUsePrag'
+  | 'nonUniqueKeys',
+  [
+    {
+      checkFragmentShorthand?: boolean;
+      checkKeyMustBeforeSpread?: boolean;
+      warnOnDuplicates?: boolean;
+    }?,
+  ]
+> = {
+  defaultOptions: [],
   meta: {
+    type: 'problem',
     docs: {
       description: 'Disallow missing `key` props in iterators/collection literals',
-      category: 'Possible Errors',
-      recommended: true,
+      recommended: 'recommended',
       url: 'https://qwik.builder.io/docs/advanced/eslint/#jsx-key',
     },
-
-    messages,
-
+    messages: {
+      missingIterKey: 'Missing "key" prop for element in iterator.',
+      missingIterKeyUsePrag:
+        'Missing "key" prop for element in iterator. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead',
+      missingArrayKey:
+        'Missing "key" prop for element in array. The key prop allows for improved rendering performance.',
+      missingArrayKeyUsePrag:
+        'Missing "key" prop for element in array. The key prop allows for improved rendering performance. Shorthand fragment syntax does not support providing keys. Use <Fragment> instead',
+      nonUniqueKeys: '`key` prop must be unique',
+    },
     schema: [
       {
         type: 'object',
@@ -71,7 +83,7 @@ export const jsxKey = {
     const checkKeyMustBeforeSpread = options.checkKeyMustBeforeSpread;
     const warnOnDuplicates = options.warnOnDuplicates;
 
-    function checkIteratorElement(node) {
+    function checkIteratorElement(node: TSESTree.Expression) {
       if (
         node.type === 'JSXElement' &&
         !jsxAstUtils.hasProp(node.openingElement.attributes, 'key')
@@ -88,7 +100,10 @@ export const jsxKey = {
       }
     }
 
-    function getReturnStatements(node, returnStatements: any[] = []) {
+    function getReturnStatements(
+      node: TSESTree.Node,
+      returnStatements: TSESTree.ReturnStatement[]
+    ) {
       if (node.type === 'IfStatement') {
         if (node.consequent) {
           getReturnStatements(node.consequent, returnStatements);
@@ -96,7 +111,7 @@ export const jsxKey = {
         if (node.alternate) {
           getReturnStatements(node.alternate, returnStatements);
         }
-      } else if (Array.isArray(node.body)) {
+      } else if (node.type === 'BlockStatement') {
         node.body.forEach((item) => {
           if (item.type === 'IfStatement') {
             getReturnStatements(item, returnStatements);
@@ -111,7 +126,7 @@ export const jsxKey = {
       return returnStatements;
     }
 
-    function isKeyAfterSpread(attributes) {
+    function isKeyAfterSpread(attributes: TSESTree.Node[]) {
       let hasFoundSpread = false;
       return attributes.some((attribute) => {
         if (attribute.type === 'JSXSpreadAttribute') {
@@ -131,13 +146,13 @@ export const jsxKey = {
      *
      * @param {ASTNode} node
      */
-    function checkFunctionsBlockStatement(node) {
+    function checkFunctionsBlockStatement(node: TSESTree.Node) {
       if (isFunctionLikeExpression(node)) {
-        if (node.body.type === 'BlockStatement') {
-          getReturnStatements(node.body)
+        if (node.type === 'BlockStatement') {
+          getReturnStatements(node, [])
             .filter((returnStatement) => returnStatement && returnStatement.argument)
             .forEach((returnStatement) => {
-              checkIteratorElement(returnStatement.argument);
+              checkIteratorElement(returnStatement.argument!);
             });
         }
       }
@@ -149,21 +164,21 @@ export const jsxKey = {
      *
      * @param {ASTNode} node
      */
-    function checkArrowFunctionWithJSX(node) {
+    function checkArrowFunctionWithJSX(node: TSESTree.Node) {
       const isArrFn = node && node.type === 'ArrowFunctionExpression';
       const shouldCheckNode = (n) => n && (n.type === 'JSXElement' || n.type === 'JSXFragment');
       if (isArrFn && shouldCheckNode(node.body)) {
-        checkIteratorElement(node.body);
+        checkIteratorElement(node);
       }
-      if (node.body.type === 'ConditionalExpression') {
-        if (shouldCheckNode(node.body.consequent)) {
-          checkIteratorElement(node.body.consequent);
+      if (node.type === 'ConditionalExpression') {
+        if (shouldCheckNode(node.consequent)) {
+          checkIteratorElement(node.consequent);
         }
-        if (shouldCheckNode(node.body.alternate)) {
-          checkIteratorElement(node.body.alternate);
+        if (shouldCheckNode(node.alternate)) {
+          checkIteratorElement(node.alternate);
         }
-      } else if (node.body.type === 'LogicalExpression' && shouldCheckNode(node.body.right)) {
-        checkIteratorElement(node.body.right);
+      } else if (node.type === 'LogicalExpression' && shouldCheckNode(node.right)) {
+        checkIteratorElement(node.right);
       }
     }
 
@@ -189,30 +204,54 @@ export const jsxKey = {
         isWithinChildrenToArray = false;
       },
 
-      'ArrayExpression, JSXElement > JSXElement'(node) {
+      ArrayExpression(node: TSESTree.ArrayExpression) {
         if (isWithinChildrenToArray) {
           return;
         }
 
-        const jsx = (node.type === 'ArrayExpression' ? node.elements : node.parent.children).filter(
-          (x) => x && x.type === 'JSXElement'
-        );
+        const jsx = node.elements.filter((x) => x && x.type === 'JSXElement');
         if (jsx.length === 0) {
           return;
         }
 
         const map = {};
+        if (warnOnDuplicates) {
+          Object.values(map)
+            .filter((v: any) => v.length > 1)
+            .forEach((v: any) => {
+              v.forEach((n: any) => {
+                if (!seen.has(n)) {
+                  seen.add(n);
+                  context.report({
+                    node: n,
+                    messageId: 'nonUniqueKeys',
+                  });
+                }
+              });
+            });
+        }
+      },
+      'JSXElement > JSXElement'(node: TSESTree.JSXElement) {
+        if (isWithinChildrenToArray) {
+          return;
+        }
+
+        const jsx = node.children.filter((x) => x && x.type === 'JSXElement');
+        if (jsx.length === 0) {
+          return;
+        }
+
+        const map = {};
+
         jsx.forEach((element) => {
-          const attrs = element.openingElement.attributes;
-          const keys = attrs.filter((x) => x.name && x.name.name === 'key');
+          const attrs = node.openingElement.attributes;
+          const keys = attrs.filter((x) => x.type && x.name === 'key');
 
           if (keys.length === 0) {
-            if (node.type === 'ArrayExpression') {
-              context.report({
-                node: element,
-                messageId: 'missingArrayKey',
-              });
-            }
+            context.report({
+              node: element,
+              messageId: 'missingArrayKey',
+            });
           }
         });
 

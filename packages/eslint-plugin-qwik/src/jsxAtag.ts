@@ -9,7 +9,7 @@ export const jsxAtag = createRule({
     type: 'problem',
     docs: {
       description: 'For a perfect SEO score, always provide href attribute for <a> elements.',
-      recommended: 'warn',
+      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [],

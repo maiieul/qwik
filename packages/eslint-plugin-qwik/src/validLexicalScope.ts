@@ -1,11 +1,10 @@
 /* eslint-disable no-console */
 import { ESLintUtils } from '@typescript-eslint/utils';
-import type { Scope } from '@typescript-eslint/utils/dist/ts-eslint-scope';
 import ts from 'typescript';
 import type { Identifier } from 'estree';
 import redent from 'redent';
-import type { RuleContext } from '@typescript-eslint/utils/dist/ts-eslint';
 import { QwikEslintExamples } from '../examples';
+import { RuleContext, Scope } from '@typescript-eslint/utils/ts-eslint';
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://qwik.builder.io/docs/advanced/eslint/#${name}`
@@ -26,7 +25,7 @@ export const validLexicalScope = createRule({
     docs: {
       description:
         'Used the tsc typechecker to detect the capture of unserializable data in dollar ($) scopes.',
-      recommended: 'error',
+      recommended: 'recommended',
     },
 
     schema: [
@@ -64,7 +63,7 @@ export const validLexicalScope = createRule({
     const relevantScopes: Map<any, string> = new Map();
     let exports: ts.Symbol[] = [];
 
-    function walkScope(scope: Scope) {
+    function walkScope(scope: Scope.Scope) {
       scope.references.forEach((ref) => {
         const declaredVariable = ref.resolved;
         const declaredScope = ref.resolved?.scope;
@@ -76,7 +75,7 @@ export const validLexicalScope = createRule({
           if (variableType === 'ImportBinding') {
             return;
           }
-          let dollarScope: Scope | null = ref.from;
+          let dollarScope: Scope.Scope | null = ref.from;
           let dollarIdentifier: string | undefined;
           while (dollarScope) {
             dollarIdentifier = relevantScopes.get(dollarScope);
@@ -96,7 +95,7 @@ export const validLexicalScope = createRule({
             }
             const identifier = ref.identifier;
             const tsNode = esTreeNodeToTSNodeMap.get(identifier);
-            let ownerDeclared: Scope | null = declaredScope;
+            let ownerDeclared: Scope.Scope | null = declaredScope;
             while (ownerDeclared) {
               if (relevantScopes.has(ownerDeclared)) {
                 break;
@@ -118,17 +117,19 @@ export const validLexicalScope = createRule({
                 }
               }
 
-              const reason = canCapture(context, typeChecker, tsNode, ref.identifier, opts);
-              if (reason) {
-                context.report({
-                  messageId: 'referencesOutside',
-                  node: ref.identifier,
-                  data: {
-                    varName: ref.identifier.name,
-                    dollarName: dollarIdentifier,
-                    reason: humanizeTypeReason(reason),
-                  },
-                });
+              if (ref.identifier.type === 'Identifier') {
+                const reason = canCapture(context, typeChecker, tsNode, ref.identifier, opts);
+                if (reason) {
+                  context.report({
+                    messageId: 'referencesOutside',
+                    node: ref.identifier,
+                    data: {
+                      varName: ref.identifier.name,
+                      dollarName: dollarIdentifier,
+                      reason: humanizeTypeReason(reason),
+                    },
+                  });
+                }
               }
             }
           }

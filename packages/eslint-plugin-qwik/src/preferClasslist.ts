@@ -1,16 +1,21 @@
 // From: https://github.com/solidjs-community/eslint-plugin-solid/blob/d8bf1d13889fbc5fa3e644bc3f932696c78cef9d/src/rules/prefer-classlist.ts
 
-import type { TSESTree as T } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+
 import jsxAstUtils from 'jsx-ast-utils';
 import { QwikEslintExamples } from '../examples';
 
-export const preferClasslist = {
+export const preferClasslist: TSESLint.RuleModule<
+  'preferClasslist',
+  [{ class?: [string, ...Array<string>] }?]
+> = {
+  defaultOptions: [],
   meta: {
     type: 'problem',
     docs: {
-      recommended: false,
+      recommended: 'recommended',
       description:
-        'Enforce using the classlist prop over importing a classnames helper. The classlist prop accepts an object `{ [class: string]: boolean }` just like classnames.',
+        'Enforce using the classlist prop over importing a classnames helper. The classlist prop accepts an object `{ [class: string]: boolean }` just like class.',
       url: 'https://qwik.builder.io/docs/advanced/eslint/#prefer-classlist',
     },
     fixable: 'code',
@@ -18,15 +23,13 @@ export const preferClasslist = {
       {
         type: 'object',
         properties: {
-          classnames: {
+          class: {
             type: 'array',
-
             description: 'An array of names to treat as `classnames` functions',
             default: ['cn', 'clsx', 'classnames'],
             items: {
               type: 'string',
-              minItems: 1,
-              uniqueItems: true,
+              minLength: 1,
             },
           },
         },
@@ -45,13 +48,13 @@ export const preferClasslist = {
     if (modifyJsxSource) {
       return {};
     }
-    const classnames = context.options[0]?.classnames ?? ['cn', 'clsx', 'classnames'];
+    const classnames = context.options[0]?.class ?? ['cn', 'clsx', 'classnames'];
     return {
       JSXAttribute(node) {
         if (
           ['class', 'className'].indexOf(jsxAstUtils.propName(node)) === -1 ||
           jsxAstUtils.hasProp(
-            (node.parent as T.JSXOpeningElement | undefined)?.attributes,
+            (node.parent as TSESTree.JSXOpeningElement | undefined)?.attributes,
             'classlist',
             {
               ignoreCase: false,

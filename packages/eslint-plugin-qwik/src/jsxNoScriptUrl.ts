@@ -1,4 +1,4 @@
-import { ASTUtils } from '@typescript-eslint/utils';
+import { ASTUtils, TSESLint } from '@typescript-eslint/utils';
 import { QwikEslintExamples } from '../examples';
 const { getStaticValue } = ASTUtils;
 
@@ -17,11 +17,12 @@ const isJavaScriptProtocol =
  * This rule is adapted from eslint-plugin-react's jsx-no-script-url rule under the MIT license.
  * Thank you for your work!
  */
-export const jsxNoScriptUrl = {
+export const jsxNoScriptUrl: TSESLint.RuleModule<'noJSURL', []> = {
+  defaultOptions: [],
   meta: {
     type: 'problem',
     docs: {
-      recommended: 'error',
+      recommended: 'recommended',
       description: 'Disallow javascript: URLs.',
       url: 'https://qwik.builder.io/docs/advanced/eslint/#jsx-no-script-url',
     },

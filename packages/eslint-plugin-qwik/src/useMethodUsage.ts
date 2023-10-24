@@ -1,17 +1,17 @@
 /* eslint-disable no-console */
-import type { Rule } from 'eslint';
-import type { CallExpression } from 'estree';
 import type { QwikEslintExamples } from '../examples';
+import { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
-export const useMethodUsage: Rule.RuleModule = {
+export const useMethodUsage: TSESLint.RuleModule<'useWrongFunction', []> = {
+  defaultOptions: [],
   meta: {
     type: 'problem',
     docs: {
       description: 'Detect invalid use of use hooks.',
-      category: 'Variables',
-      recommended: true,
+      recommended: 'recommended',
       url: 'https://qwik.builder.io/docs/advanced/eslint/#use-method-usage',
     },
+    schema: [],
     messages: {
       useWrongFunction: 'Calling use* methods in wrong function.',
     },
@@ -24,9 +24,9 @@ export const useMethodUsage: Rule.RuleModule = {
       return {};
     }
     return {
-      'CallExpression[callee.name=/^use[A-Z]/]'(node: CallExpression & Rule.NodeParentExtension) {
-        let parent = node as Rule.Node;
-        while ((parent = parent.parent)) {
+      'CallExpression[callee.name=/^use[A-Z]/]'(node: TSESTree.Node) {
+        const parent = node.parent;
+        while (parent) {
           const type = parent.type;
           switch (type) {
             case 'VariableDeclarator':
@@ -41,6 +41,7 @@ export const useMethodUsage: Rule.RuleModule = {
             case 'Property':
             case 'ObjectExpression':
             case 'CallExpression':
+            case 'TSAsExpression':
               break;
             case 'ArrowFunctionExpression':
             case 'FunctionExpression':
