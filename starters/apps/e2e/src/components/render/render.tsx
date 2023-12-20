@@ -465,7 +465,7 @@ const Issue2414 = component$(() => {
               <th
                 key={c}
                 id={`issue-2414-${c}`}
-                onClick$={(e) => {
+                onClick$={() => {
                   sort.value = c;
                 }}
               >
@@ -838,7 +838,7 @@ export const HTMLFragmentTest = component$(() => {
 
 type A = PropsOf<"button">;
 
-export interface TestAProps extends A {}
+export type TestAProps = PropsOf<A>;
 
 export const TestA = component$<TestAProps>((props) => {
   return (
@@ -848,7 +848,7 @@ export const TestA = component$<TestAProps>((props) => {
   );
 });
 
-export interface TestBProps extends TestAProps {}
+export type TestBProps = PropsOf<TestAProps>;
 
 export const TestB = component$<TestBProps>((props) => {
   return (
