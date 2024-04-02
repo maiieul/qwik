@@ -46,6 +46,14 @@ import { z } from 'zod';
 import { isDev, isServer } from '@builder.io/qwik/build';
 import type { FormSubmitCompletedDetail } from './form-component';
 
+import type { RequestEventInternal } from '../../middleware/request-handler/request-event';
+
+// TODO: create single QGlobal type
+type AsyncStore = import('node:async_hooks').AsyncLocalStorage<RequestEventInternal>;
+interface QGlobal extends Global {
+  qcAsyncRequestStore?: AsyncStore;
+}
+
 /** @public */
 export const routeActionQrl = ((
   actionQrl: QRL<(form: JSONObject, event: RequestEventAction) => unknown>,
@@ -189,10 +197,10 @@ export const routeLoaderQrl = ((
       if (!(id in state)) {
         throw new Error(`routeLoader$ "${loaderQrl.getSymbol()}" was invoked in a route where it was not declared.
     This is because the routeLoader$ was not exported in a 'layout.tsx' or 'index.tsx' file of the existing route.
-    For more information check: https://qwik.builder.io/qwikcity/route-loader/
+    For more information check: https://qwik.dev/qwikcity/route-loader/
 
     If your are managing reusable logic or a library it is essential that this function is re-exported from within 'layout.tsx' or 'index.tsx file of the existing route otherwise it will not run or throw exception.
-    For more information check: https://qwik.builder.io/docs/cookbook/re-exporting-loaders/`);
+    For more information check: https://qwik.dev/docs/cookbook/re-exporting-loaders/`);
       }
       return _wrapSignal(state, id);
     });
@@ -287,12 +295,18 @@ export const serverQrl = <T extends ServerFunction>(qrl: QRL<T>): ServerQRL<T> =
           : undefined;
       if (isServer) {
         // Running during SSR, we can call the function directly
-        const requestEvent = [useQwikCityEnv()?.ev, this, _getContextEvent()].find(
-          (v) =>
-            v &&
-            Object.prototype.hasOwnProperty.call(v, 'sharedMap') &&
-            Object.prototype.hasOwnProperty.call(v, 'cookie')
-        );
+        let requestEvent = (globalThis as QGlobal).qcAsyncRequestStore?.getStore() as
+          | RequestEvent
+          | undefined;
+        if (!requestEvent) {
+          const contexts = [useQwikCityEnv()?.ev, this, _getContextEvent()] as RequestEvent[];
+          requestEvent = contexts.find(
+            (v) =>
+              v &&
+              Object.prototype.hasOwnProperty.call(v, 'sharedMap') &&
+              Object.prototype.hasOwnProperty.call(v, 'cookie')
+          );
+        }
         return qrl.apply(requestEvent, args);
       } else {
         // Running on the client, we need to call the function via HTTP

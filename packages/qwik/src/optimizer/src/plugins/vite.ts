@@ -37,7 +37,7 @@ import { VITE_DEV_CLIENT_QS, configureDevServer, configurePreviewServer } from '
 
 const DEDUPE = [QWIK_CORE_ID, QWIK_JSX_RUNTIME_ID, QWIK_JSX_DEV_RUNTIME_ID];
 
-const STYLING = ['.css', '.scss', '.sass', '.less'];
+const STYLING = ['.css', '.scss', '.sass', '.less', '.styl', '.stylus'];
 const FONTS = ['.woff', '.woff2', '.ttf'];
 
 /** @public */
@@ -266,6 +266,7 @@ export function qwikVite(qwikViteOpts: QwikVitePluginOptions = {}): any {
       const vendorIds = vendorRoots.map((v) => v.id);
       const isDevelopment = buildMode === 'development';
       const qDevKey = 'globalThis.qDev';
+      const qTestKey = 'globalThis.qTest';
       const qInspectorKey = 'globalThis.qInspector';
       const qSerializeKey = 'globalThis.qSerialize';
       const qDev = viteConfig?.define?.[qDevKey] ?? isDevelopment;
@@ -313,6 +314,7 @@ export function qwikVite(qwikViteOpts: QwikVitePluginOptions = {}): any {
           [qDevKey]: qDev,
           [qInspectorKey]: qInspector,
           [qSerializeKey]: qSerialize,
+          [qTestKey]: JSON.stringify(process.env.NODE_ENV === 'test'),
         },
       };
 
@@ -358,10 +360,6 @@ export function qwikVite(qwikViteOpts: QwikVitePluginOptions = {}): any {
           updatedViteConfig.build!.minify = false;
         } else {
           // Test Build
-          const qDevKey = 'globalThis.qDev';
-          const qTestKey = 'globalThis.qTest';
-          const qInspectorKey = 'globalThis.qInspector';
-
           updatedViteConfig.define = {
             [qDevKey]: true,
             [qTestKey]: true,
@@ -370,6 +368,7 @@ export function qwikVite(qwikViteOpts: QwikVitePluginOptions = {}): any {
         }
 
         (globalThis as any).qDev = qDev;
+        (globalThis as any).qTest = true;
         (globalThis as any).qInspector = qInspector;
       }
 

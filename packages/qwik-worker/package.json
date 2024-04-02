@@ -5,8 +5,8 @@
   "bugs": "https://github.com/BuilderIO/qwik/issues",
   "devDependencies": {
     "@builder.io/qwik": "workspace:^",
-    "vite": "^5.0.12",
-    "vite-plugin-static-copy": "^1.0.0"
+    "vite": "^5.1.6",
+    "vite-plugin-static-copy": "^1.0.1"
   },
   "engines": {
     "node": ">=16.8.0 <18.0.0 || >=18.11"
@@ -20,7 +20,7 @@
   "files": [
     "lib"
   ],
-  "homepage": "https://qwik.builder.io/",
+  "homepage": "https://qwik.dev/",
   "license": "MIT",
   "main": "./lib/index.qwik.mjs",
   "peerDependencies": {
